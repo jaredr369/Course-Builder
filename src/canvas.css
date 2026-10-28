@@ -1,0 +1,60 @@
+
+/* ---------- Canvas Build ---------- */
+.cv-h1{margin-bottom:14px}
+.cv-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:18px;align-items:start}
+.cv-rail{position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:8px}
+.cv-mod{padding:4px 0 8px;border-bottom:1px solid var(--line)}
+.cv-mod:last-child{border-bottom:0}
+.cv-mod-h{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--maroon);font-weight:700;padding:6px 8px 4px}
+.cv-mod-h span{display:block;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-entry{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:6px 8px;cursor:pointer;font-size:13.5px;line-height:1.35;color:var(--ink)}
+.cv-entry:hover{background:#f1ece6}
+.cv-entry.on{background:var(--maroon-tint);box-shadow:inset 3px 0 0 var(--maroon)}
+.cv-dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:4px;border:2px solid #b9b0a7;background:#fff}
+.cv-entry.cs-pasted .cv-dot{border-color:var(--warn);background:var(--warn-bg)}
+.cv-entry.cs-done .cv-dot{border-color:var(--ok);background:var(--ok)}
+.cv-entry.cs-done .cv-et{color:var(--muted)}
+.cv-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--warn);background:var(--warn-bg);border-radius:4px;padding:0 4px;margin-left:2px}
+.cv-hdr{font-size:11.5px;color:var(--muted);font-style:italic;padding:2px 8px 2px 26px}
+.cv-panel{min-width:0}
+.cv-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 12px}
+.cv-title h2{font-size:22px;margin:0}
+.cv-st.cs-todo{background:#ece7e1;color:var(--muted)}
+.cv-st.cs-pasted{background:var(--warn-bg);color:var(--warn)}
+.cv-st.cs-done{background:var(--ok-bg);color:var(--ok)}
+.cv-card h3{font:600 16px/1.3 var(--serif);margin:0 0 8px}
+.cv-how{margin:0;padding-left:20px}
+.cv-how li{margin:4px 0}
+.cv-src{font-size:13.5px;margin:0 0 12px;color:var(--muted)}
+.cv-src.ok{color:var(--ok)}
+.cv-src code,.flag code{font-size:12px}
+.cv-issues{margin-bottom:8px}
+.cv-frame{width:100%;height:560px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.cv-code{width:100%;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;overflow:auto}
+.cv-set{list-style:none;margin:0;padding:0}
+.cv-set li{border-top:1px solid var(--line);padding:4px 0}
+.cv-set li:first-child{border-top:0}
+.cv-set .checkline{width:100%}
+.cv-row{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,1.4fr);gap:2px 16px;width:100%}
+.cv-set .cv-val{color:var(--ink)}
+@media (max-width:600px){.cv-row{grid-template-columns:1fr}}
+.cv-rub{border-collapse:collapse;width:100%;font-size:13px}
+.cv-rub th,.cv-rub td{border:1px solid var(--line);padding:8px;vertical-align:top;text-align:left}
+.cv-rub th{background:#f3efea}
+.cv-rub .cv-copy{display:block;margin-top:6px}
+.cv-qs{margin:8px 0 0;padding-left:20px;font-size:13.5px}
+.cv-qs li{margin:6px 0}
+.cv-qs li.ok{color:var(--ok);font-weight:600}
+.cv-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 30px}
+.cv-mods{list-style:none;margin:10px 0 0;padding:0}
+.cv-mods li{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding:6px 0}
+.cv-mods li:first-child{border-top:0}
+@media (max-width:1100px){.cv-layout{grid-template-columns:1fr}.cv-rail{position:static;max-height:none}}
+@media (max-width:900px){.brand{flex-wrap:wrap}}
+@media (max-width:600px){.phase-switch{margin-left:0}.phase-switch button{padding:6px 7px!important;font-size:12px!important}.phase-switch button .pn{display:none}}
+
+.cv-gs{background:#f7f5f2;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:4px 0 12px}
+.cv-gs > .sub{margin:0 0 4px}
+.cv-gs-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px;overflow-wrap:anywhere}
+.cv-gs-row:first-of-type{border-top:0}
+@media (max-width:600px){.cv-gs-row{grid-template-columns:1fr}}

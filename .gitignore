@@ -1,0 +1,11 @@
+# test output and scratch
+test/out*/
+test/docs/
+test/_r_*.py
+test/dbg*.py
+__pycache__/
+# extracted copies used for reading the source
+app.js
+app_s.js
+body.html
+style.css
