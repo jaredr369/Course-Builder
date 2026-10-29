@@ -11,6 +11,8 @@ A single-file HTML tool for building Mays Business School Flex Online courses. I
 
 ### Using it
 
+`index.html` at the top of the repository is always the newest build. With GitHub Pages turned on, it opens at https://jaredr369.github.io/Course-Builder/
+
 Open the latest `dist/Course Creator 3.1.x.html` in Chrome or Edge. Those browsers can save straight into a course folder. Other browsers download each document instead. AI drafting needs a TAMU AI Chat key, entered under AI settings.
 
 ### Building
