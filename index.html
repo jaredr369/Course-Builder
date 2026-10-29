@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Course Creator 3.1.26</title>
+<title>Course Creator 3.1.27</title>
 <style>
 :root{
   --maroon:#500000; --maroon-2:#732f2f; --maroon-tint:#f6eeee;
@@ -456,7 +456,7 @@ body.nav-min .step-btn.active .step-num{box-shadow:0 0 0 3px rgba(80,0,0,.18)}
 <header class="top">
   <div class="brand">
     <span class="mark">MAYS</span>
-    <div style="min-width:0"><div class="app-name">Course Creator <span class="app-ver" title="Version 3.1.26">3.1.26</span></div>
+    <div style="min-width:0"><div class="app-name">Course Creator <span class="app-ver" title="Version 3.1.27">3.1.27</span></div>
       <div class="course-switch">
         <button id="courseMenuBtn" aria-haspopup="true" aria-expanded="false" title="Switch courses"><span id="courseLabel"></span><span class="caret">▾</span></button>
         <div id="courseMenu" class="course-menu" hidden role="menu"></div>
@@ -830,7 +830,7 @@ function updateChrome() {
   $("#phPlan").setAttribute("aria-selected", ph === "plan"); $("#phDev").setAttribute("aria-selected", ph === "dev" && !cv);
   $("#btnNew").hidden = S.phase === "dev"; $("#btnOpen").hidden = S.phase === "dev"; $("#btnCoach").hidden = ph === "dev" || viewOnly();
   $("#btnFolder").hidden = ph !== "dev";
-  document.title = (cv ? "Canvas Build" : ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.26";
+  document.title = (cv ? "Canvas Build" : ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.27";
 }
 function render() { updateChrome(); if (phaseOf() === "dev") DEV.render(); else planRender(); }
 function rerender() { updateChrome(); if (phaseOf() === "dev") DEV.render(); else planRerender(); }
@@ -3167,7 +3167,36 @@ async function chooseFolder() {
   if (!looksRight && !confirm(`"${h.name}" doesn't look like a course project folder. Project folders contain folders such as "03 - Learning Activities".\n\nUse it anyway? The tool will create the folders it needs.`)) return null;
   DIR = h; await idbSet("dir:" + P.id, h); P.folderName = h.name; save();
   if (names.includes("02 - Planning Documents")) await tryRestore(h);
+  FOLDER_NOTE = ""; await findSavedInFolder(h);
   return h;
+}
+let FOLDER_NOTE = "";
+async function fileIn(root, parts, name) {
+  try { let d = root; for (const p of parts) d = await d.getDirectoryHandle(p); return await (await d.getFileHandle(name)).getFile(); } catch (e) { return null; }
+}
+async function findSavedInFolder(h) {
+  let found = 0, filled = 0;
+  for (const it of live().filter(i => (i.status || "todo") === "todo")) {
+    const outs = outputsFor(it), files = [];
+    for (const o of outs) files.push(await fileIn(h, FOLDERS[o.folder], o.name));
+    if (!files[0]) continue;
+    const have = outs.filter((o, k) => files[k]);
+    it.savedFiles = have.map(o => ({ path:FOLDERS[o.folder], name:o.name }));
+    it.savedAt = Math.max(...have.map((o, k) => files[outs.indexOf(o)].lastModified));
+    let read = false;
+    if (typeof cvScannable === "function" && cvScannable(it)) {
+      try {
+        const parsed = await parseSavedDoc(it, await files[0].arrayBuffer()); delete parsed.title;
+        const d = Object.assign(clone(it.data), parsed); if (parsed.settings) d.settings = Object.assign({}, it.data.settings || {}, parsed.settings);
+        it.data = d; read = true; filled++;
+      } catch (e) {}
+    }
+    it.status = "saved"; it.review = ""; it.fromFolder = !read;
+    it.savedText = bareTitle(it.title) + " " + flatText(it.data);
+    found++;
+  }
+  if (found) { save(); FOLDER_NOTE = `Found ${found} ${found === 1 ? "document" : "documents"} already saved in this folder and marked ${found === 1 ? "it" : "them"} as saved.${found - filled ? (found - filled === 1 ? " One of them is a video script or cohort session file, so edit it in Word." : ` ${found - filled} of them are video scripts or cohort session files, so edit those in Word.`) : ""}`; }
+  return found;
 }
 async function dirAt(root, parts) { let d = root; for (const p of parts) d = await d.getDirectoryHandle(p, { create:true }); return d; }
 async function writeToFolder(root, parts, name, blob) {
@@ -3562,6 +3591,7 @@ function renderItem(it) {
   <div class="row" style="align-items:flex-start;justify-content:space-between;flex-wrap:nowrap;gap:14px"><h1 style="margin-bottom:6px">${esc(displayTitle(it))}</h1>
     <span style="margin-top:8px">${statusPill(it)}</span></div>
   <div class="mod-meta" style="margin:0 0 14px">${it.clos.map(c => `<span class="chip static" title="${esc((P.plan.clos.find(x => x.id === c) || {}).text || "")}">${cloLabel(c)}</span>`).join("")}${dueTxt ? `<span class="sub">${dueTxt}</span>` : ""}${it.kind === "gettingstarted" ? "" : `<button class="btn link small" data-action="changeItem" data-arg="${it.id}">Change title, type, module or objectives</button>`}</div>
+  ${it.fromFolder ? `<div class="flag warn"><b>This document is already in your course folder</b>, but this copy of the tool doesn't have its text. Edit it in Word. Saving here replaces the Word file with what's on this page.</div>` : ""}
   ${it.status === "review" ? `<div class="flag"><b>Needs another look.</b> ${esc(it.review)} Save again when it's right.</div>` : ""}
   ${planBits.length ? `<div class="plan-note">${planBits.join("<br>")}</div>` : ""}
   <div class="editor">
@@ -3913,7 +3943,8 @@ function closeModal() { $("#modal").hidden = true; }
 function flatText(o) { return typeof o === "string" ? o : Array.isArray(o) ? o.map(flatText).join(" ") : o && typeof o === "object" ? Object.values(o).map(flatText).join(" ") : ""; }
 async function acceptSave(id) {
   const it = itemById(id); if (!it) return;
-  if (!hasContent(it) && !confirm("This document is still mostly empty. Save it anyway?")) return;
+  if (it.fromFolder && !confirm("This replaces the Word file in your course folder with what's on this page, and the page doesn't have the Word file's text. Replace it?")) return;
+  if (!it.fromFolder && !hasContent(it) && !confirm("This document is still mostly empty. Save it anyway?")) return;
   if (it.kind === "cohort" && !(it.data.slides || []).length && String(it.data.slideOutline || "").trim()) it.data.slides = slidesFromOutline(it.data.slideOutline, it.data.sessionTitle || bareTitle(it.title), `${MN(it.module)} Cohort Session`);
   let h = await folderHandle(true);
   if (!h && FS_OK && !P.folderName) h = await chooseFolder();
@@ -3928,7 +3959,7 @@ async function acceptSave(id) {
       for (const f of files) download(f.blob, f.name);
       toast(files.length > 1 ? `${files.length} files downloaded. Move them into ${files[0].path.join(" / ")}.` : `Downloaded. Move it into ${files[0].path.join(" / ")}.`);
     }
-    it.savedFiles = files.map(f => ({ path:f.path, name:f.name })); it.status = "saved"; it.review = ""; it.savedAt = Date.now();
+    it.savedFiles = files.map(f => ({ path:f.path, name:f.name })); it.status = "saved"; it.review = ""; it.savedAt = Date.now(); delete it.fromFolder;
     it.savedText = bareTitle(it.title) + " " + flatText(it.data);
     save(); render();
   } catch (e) { console.error(e); alert("The document couldn't be saved: " + e.message); if (btn) { btn.disabled = false; btn.textContent = "Accept and save"; } }
@@ -3960,7 +3991,7 @@ async function zipAll() {
 /* ---------------- Events ---------------- */
 const ACTIONS = {
   go: a => go(a),
-  chooseFolder: async () => { if (await chooseFolder()) { toast("Course folder connected"); render(); } },
+  chooseFolder: async () => { if (await chooseFolder()) { toast(FOLDER_NOTE || "Course folder connected"); render(); } },
   openItem: a => { closeModal(); COHORT_PART = "plan"; go("item", a); },
   changeItem: a => changeDialog(itemById(a)),
   addItem: a => changeDialog(null, parseInt(a, 10)),
@@ -4029,7 +4060,7 @@ function onField(el, structural) {
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 $("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
-$("#btnFolder").onclick = async () => { if (await chooseFolder()) { toast("Course folder connected"); render(); } };
+$("#btnFolder").onclick = async () => { if (await chooseFolder()) { toast(FOLDER_NOTE || "Course folder connected"); render(); } };
 
 
 
