@@ -1,4 +1,4 @@
-"""Build Course Creator 3.1.25 from 3.5 plus the Canvas Build phase."""
+"""Build Course Creator 3.1.26 from 3.5 plus the Canvas Build phase."""
 import json, re, sys
 
 src = open('cc35.html', encoding='utf8').read()
@@ -16,9 +16,9 @@ def sub(old, new, count=1):
     src = src.replace(old, new)
 
 # version
-sub('title="Version 3.5">3.5<', 'title="Version 3.1.25">3.1.25<')
-sub('<title>Course Creator 3.5</title>', '<title>Course Creator 3.1.25</title>')
-sub('" · Course Creator 3.5";', '" · Course Creator 3.1.25";')
+sub('title="Version 3.5">3.5<', 'title="Version 3.1.26">3.1.26<')
+sub('<title>Course Creator 3.5</title>', '<title>Course Creator 3.1.26</title>')
+sub('" · Course Creator 3.5";', '" · Course Creator 3.1.26";')
 
 # styles
 sub('</style>', canvas_css + '</style>')
@@ -34,8 +34,8 @@ sub('$("#phPlan").classList.toggle("on", ph === "plan"); $("#phDev").classList.t
     '  $("#phPlan").classList.toggle("on", ph === "plan"); $("#phDev").classList.toggle("on", ph === "dev" && !cv); $("#phCanvas").classList.toggle("on", cv);\n'
     '  $("#phCanvas").setAttribute("aria-selected", cv); $("#phCanvas").classList.toggle("locked", S.phase !== "dev");')
 sub('$("#phDev").setAttribute("aria-selected", ph === "dev");', '$("#phDev").setAttribute("aria-selected", ph === "dev" && !cv);')
-sub('document.title = (ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.25";',
-    'document.title = (cv ? "Canvas Build" : ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.25";')
+sub('document.title = (ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.26";',
+    'document.title = (cv ? "Canvas Build" : ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.26";')
 
 # DEV render routes to Canvas Build
 sub('function render() {\n  renderNav();\n  const v = P.view.screen;',
@@ -189,6 +189,7 @@ exec(open('src/gettingstarted_patch.py', encoding='utf8').read())
 exec(open('src/plandot_patch.py', encoding='utf8').read())
 exec(open('src/finishdone_patch.py', encoding='utf8').read())
 exec(open('src/modcount_patch.py', encoding='utf8').read())
+exec(open('src/restore_patch.py', encoding='utf8').read())
 
 # Module 1 needs no cohort activity anywhere: step gate, progress, tab dot, review stat
 sub("""      const parts = [!md.title.trim() && "title", !md.clos.length && "CLOs met", !md.cohort.trim() && "cohort session activity"].filter(Boolean);""",
@@ -229,5 +230,5 @@ _seg = re.sub(r'(?<![A-Za-z])M\$\{(\w+)\.module\}', r'${MT(\1.module)}', _seg)
 _seg = re.sub(r'Module \$\{(\w+\.module|old|module|from)\}', r'${MN(\1)}', _seg)
 src = src[:_a] + _seg + src[_b:]
 
-open('dist/Course Creator 3.1.25.html', 'w', encoding='utf8').write(src)
+open('dist/Course Creator 3.1.26.html', 'w', encoding='utf8').write(src)
 print('built', len(src))

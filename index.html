@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Course Creator 3.1.25</title>
+<title>Course Creator 3.1.26</title>
 <style>
 :root{
   --maroon:#500000; --maroon-2:#732f2f; --maroon-tint:#f6eeee;
@@ -456,7 +456,7 @@ body.nav-min .step-btn.active .step-num{box-shadow:0 0 0 3px rgba(80,0,0,.18)}
 <header class="top">
   <div class="brand">
     <span class="mark">MAYS</span>
-    <div style="min-width:0"><div class="app-name">Course Creator <span class="app-ver" title="Version 3.1.25">3.1.25</span></div>
+    <div style="min-width:0"><div class="app-name">Course Creator <span class="app-ver" title="Version 3.1.26">3.1.26</span></div>
       <div class="course-switch">
         <button id="courseMenuBtn" aria-haspopup="true" aria-expanded="false" title="Switch courses"><span id="courseLabel"></span><span class="caret">▾</span></button>
         <div id="courseMenu" class="course-menu" hidden role="menu"></div>
@@ -830,7 +830,7 @@ function updateChrome() {
   $("#phPlan").setAttribute("aria-selected", ph === "plan"); $("#phDev").setAttribute("aria-selected", ph === "dev" && !cv);
   $("#btnNew").hidden = S.phase === "dev"; $("#btnOpen").hidden = S.phase === "dev"; $("#btnCoach").hidden = ph === "dev" || viewOnly();
   $("#btnFolder").hidden = ph !== "dev";
-  document.title = (cv ? "Canvas Build" : ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.25";
+  document.title = (cv ? "Canvas Build" : ph === "dev" ? "Course Development" : "Course Planning") + " · Course Creator 3.1.26";
 }
 function render() { updateChrome(); if (phaseOf() === "dev") DEV.render(); else planRender(); }
 function rerender() { updateChrome(); if (phaseOf() === "dev") DEV.render(); else planRerender(); }
@@ -3188,11 +3188,15 @@ async function backupToFolder(force) {
 async function tryRestore(h) {
   try {
     const d = await h.getDirectoryHandle("02 - Planning Documents");
-    const f = await (await d.getFileHandle(DATA_FILE)).getFile();
+    let f;
+    try { f = await (await d.getFileHandle(DATA_FILE)).getFile(); } catch (e) { if (P.plan) toast("This folder doesn't have saved Course Development work yet. It will once you save a document."); return; }
     const data = JSON.parse(await f.text());
     if (!data || !data.items) return;
-    if (P.plan && data.id === P.id && data.updated <= P.updated) return;
-    if (!confirm(`This folder has saved work for ${data.plan ? [data.plan.course.number, data.plan.course.name].join(" ") : "a course"}, last updated ${new Date(data.updated).toLocaleString()}.\n\nLoad it? ${P.plan ? "It will replace what's on screen for this course." : ""}`)) return;
+    // a course on screen with nothing drafted, saved or changed yet counts as empty, whatever its date
+    const fresh = !P.plan || (!(P.items || []).some(i => i.status && i.status !== "todo") && !(P.changes || []).some(c => !c.auto) && !P.canvas);
+    if (P.plan && data.id === P.id && data.updated === P.updated) return;
+    const older = !fresh && data.updated < P.updated;
+    if (!confirm(`This folder has saved work for ${data.plan ? [data.plan.course.number, data.plan.course.name].join(" ") : "a course"}, last updated ${new Date(data.updated).toLocaleString()}.${older ? "\n\nIt's older than the work on screen, which was last changed " + new Date(P.updated).toLocaleString() + "." : ""}\n\nLoad it? ${P.plan && !fresh ? "It will replace what's on screen for this course." : ""}`)) return;
     const keepId = P.id; Object.assign(P, data, { id:keepId, folderName:h.name }); P.plan = snapshotOf(S); save(); render(); toast("Loaded the saved work from your course folder");
   } catch (e) {}
 }
