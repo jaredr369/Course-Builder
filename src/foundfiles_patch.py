@@ -45,3 +45,29 @@ sub('''  if (!hasContent(it) && !confirm("This document is still mostly empty. S
   if (!it.fromFolder && !hasContent(it) && !confirm("This document is still mostly empty. Save it anyway?")) return;''')
 sub('''    it.savedFiles = files.map(f => ({ path:f.path, name:f.name })); it.status = "saved"; it.review = ""; it.savedAt = Date.now();''',
     '''    it.savedFiles = files.map(f => ({ path:f.path, name:f.name })); it.status = "saved"; it.review = ""; it.savedAt = Date.now(); delete it.fromFolder;''')
+
+# Cohort session files carry the session title, which a new copy may not have yet:
+# match them by module and file type, and take the session title from the file name
+sub('''    const outs = outputsFor(it), files = [];
+    for (const o of outs) files.push(await fileIn(h, FOLDERS[o.folder], o.name));
+    if (!files[0]) continue;''', '''    let outs = outputsFor(it), files = [];
+    for (const o of outs) files.push(await fileIn(h, FOLDERS[o.folder], o.name));
+    if (!files[0] && it.kind === "cohort") {
+      const names = await namesIn(h, FOLDERS.cohort), m = MT(it.module);
+      const plan = names.find(n => n.startsWith(`${m} Cohort Lesson Plan-`) && /\\.docx$/i.test(n));
+      if (plan) {
+        const title = plan.slice(`${m} Cohort Lesson Plan-`.length).replace(/\\.docx$/i, "");
+        const oldTitle = it.data.sessionTitle; it.data.sessionTitle = title;
+        const want = [plan, names.find(n => n === safeName(`${m} Cohort Outline-${title}`) + ".docx"), names.find(n => n === safeName(`${m} Cohort Slides-${title}`) + ".pptx")];
+        outs = [{ part:"plan", folder:"cohort", name:plan }, { part:"outline", folder:"cohort", name:safeName(`${m} Cohort Outline-${title}`) + ".docx" }, { part:"slides", folder:"cohort", name:safeName(`${m} Cohort Slides-${title}`) + ".pptx" }].filter((o, k) => want[k]);
+        files = []; for (const o of outs) files.push(await fileIn(h, FOLDERS[o.folder], o.name));
+        if (!files[0]) it.data.sessionTitle = oldTitle;
+      }
+    }
+    if (!files[0]) continue;''')
+sub('''async function findSavedInFolder(h) {''', '''async function namesIn(root, parts) {
+  const out = [];
+  try { let d = root; for (const p of parts) d = await d.getDirectoryHandle(p); for await (const [n, x] of d.entries()) if (!x || x.kind !== "directory") out.push(n); } catch (e) {}
+  return out;
+}
+async function findSavedInFolder(h) {''')
